@@ -126,13 +126,14 @@ void FillTriangleOpt(Triangle *triangle)
     int j;
 
     for (int i = a->y; i > c->y; i--) {
-        if (i > b->y) j = (i - b_ab) / m_ab;
-        else          j = (i - b_bc) / m_bc;
+        j = (i > b->y) ?
+            (i - b_ab) / m_ab :
+            (i - b_bc) / m_bc;
 
         int k = (i - b_ac) / m_ac;
 
-        for (int z = std::min(j, k); z < std::max(j, k); z++) {
-            pixels[PLANE_H - i - 1][z] = 1;
+        for (int x = std::min(j, k); x < std::max(j, k); x++) {
+            pixels[PLANE_H - i - 1][x] = 1;
         }
     }
 }
@@ -150,8 +151,6 @@ int main()
 {
     std::memset(pixels, 0, sizeof(pixels));
 
-    //Triangle triangle{{1, 40}, {60, 80}, {120, 50}};
-    //Triangle triangle {{80, 1}, {41, 80}, {1, 50}};
     Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
     DrawTriangle(&triangle, true);
 

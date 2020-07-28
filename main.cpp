@@ -56,7 +56,10 @@ void DrawLine(const Point &p, const Point &q)
 
 float TriangleArea(const Triangle &triangle)
 {
-    return std::fabs(((triangle.a.x * (triangle.b.y - triangle.c.y)) + (triangle.b.x * (triangle.c.y - triangle.a.y)) + (triangle.c.x * (triangle.a.y - triangle.b.y))) / 2);
+    return std::fabs((
+        (triangle.a.x * (triangle.b.y - triangle.c.y)) + 
+        (triangle.b.x * (triangle.c.y - triangle.a.y)) + 
+        (triangle.c.x * (triangle.a.y - triangle.b.y))) / 2);
 }
 
 bool PointInTriangle(const Point &point, const Triangle &triangle)
@@ -127,12 +130,10 @@ void FillTriangleOpt(Triangle *triangle)
     float b_ac = a->y - (m_ac * a->x);
     float b_bc = b->y - (m_bc * b->x);
 
-    int j;
-
     for (int i = a->y; i > c->y; i--) {
-        j = (i > b->y) ?
-            (i - b_ab) / m_ab :
-            (i - b_bc) / m_bc;
+        int j = (i > b->y) ?
+                (i - b_ab) / m_ab :
+                (i - b_bc) / m_bc;
 
         int k = (i - b_ac) / m_ac;
 
@@ -166,38 +167,38 @@ void RenderAscii()
     }
 }
 
-void RenderPng()
-{
-    png_structp png = NULL;
-    png_infop info = NULL;
+// void RenderPng()
+// {
+//     png_structp png = NULL;
+//     png_infop info = NULL;
 
-    FILE *file = fopen("output.png", "wb");
+//     FILE *file = fopen("output.png", "wb");
 
-    if (!file) {
-        std::cout << "Error Rendering PNG: fopen returned NULL." << std::endl;
-        goto cleanup;
-    }
+//     if (!file) {
+//         std::cout << "Error Rendering PNG: fopen returned NULL." << std::endl;
+//         goto cleanup;
+//     }
 
-    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) {
-        std::cout << "Error Rendering PNG: png_create_write_struct returned NULL." << std::endl;
-        goto cleanup;
-    }
+//     png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+//     if (!png) {
+//         std::cout << "Error Rendering PNG: png_create_write_struct returned NULL." << std::endl;
+//         goto cleanup;
+//     }
     
-    info = png_create_info_struct(png);
-    if (!info) {
-        std::cout << "Error Rendering PNG: png_create_info_struct returned NULL." << std::endl;
-        goto cleanup;
-    }
+//     info = png_create_info_struct(png);
+//     if (!info) {
+//         std::cout << "Error Rendering PNG: png_create_info_struct returned NULL." << std::endl;
+//         goto cleanup;
+//     }
 
-    // Work in progress.
-    info->width = PLANE_W;
-    info->height = PLANE_H;
+//     // Work in progress.
+//     info->width = PLANE_W;
+//     info->height = PLANE_H;
 
-cleanup:
-    fclose(file);
-    png_destroy_write_struct(&png, &info);
-}
+// cleanup:
+//     fclose(file);
+//     png_destroy_write_struct(&png, &info);
+// }
 
 int main()
 {
@@ -206,6 +207,6 @@ int main()
     Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
     DrawTriangle(&triangle, true);
     
-    //RenderPng();
+    RenderAscii();
     return 0;
 }

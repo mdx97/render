@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include "libpng16/png.h"
 
 #define PLANE_W 128
 #define PLANE_H 128
@@ -24,30 +25,30 @@ void DrawLine(const Point &p, const Point &q)
     const Point &left = p.x < q.x ? p : q;
     const Point &right = p.x < q.x ? q : p;
     
-    int rise = right.y - left.y;
-    int run = right.x - left.x;
+    int dy = right.y - left.y;
+    int dx = right.x - left.x;
 
-    if (run == 0) {
+    if (dx == 0) {
         int min_y = std::min(left.y, right.y);
-        for (int i = 0; i < std::abs(rise); i++) {
+        for (int i = 0; i < std::abs(dy); i++) {
             pixels[PLANE_H - min_y - i - 1][left.x] = 1;
         }
         return;
     }
 
-    float slope = (float)rise / (float)run;
-    int slope_sign = slope >= 0 ? 1 : -1;
+    float m = (float)dy / (float)dx;
+    int m_sign = m >= 0 ? 1 : -1;
 
-    for (int x = 0; x < run; x++) {
-        float rel_y = slope * x;
+    for (int x = 0; x < dx; x++) {
+        float rel_y = m * x;
         int abs_x = left.x + x;
         int abs_y = left.y + rel_y;
 
         pixels[PLANE_H - abs_y - 1][abs_x] = 1;
 
-        int next_y = (int)(left.y + (slope * (x + 1)));
+        int next_y = (int)(left.y + (m * (x + 1)));
 
-        for (int y = abs_y; y != next_y; y += slope_sign) {
+        for (int y = abs_y; y != next_y; y += m_sign) {
             pixels[PLANE_H - y - 1][abs_x] = 1;
         }
     }
@@ -83,6 +84,7 @@ bool PointInTriangle(const Point &point, const Triangle &triangle)
     return area <= TriangleArea(triangle);
 }
 
+// Naive approach to scanline filling which traverses the grid in which the triangle lies, checking if every point is within the triangle.
 void FillTriangleNaive(const Triangle &triangle)
 {
     int min_x = std::min(std::min(triangle.a.x, triangle.b.x), triangle.c.x);
@@ -99,6 +101,8 @@ void FillTriangleNaive(const Triangle &triangle)
     }
 }
 
+// Custom triangle filling algorithm that apparently works very similarly to standard triangle filling algorithms / scanline based rendering (except we're using a single shape here).
+// TODO: Needs to accomodate flat topped and flat bottomed triangles.
 void FillTriangleOpt(Triangle *triangle)
 {
     Point *a, *b, *c;
@@ -140,6 +144,7 @@ void FillTriangleOpt(Triangle *triangle)
 
 void DrawTriangle(Triangle *triangle, bool fill)
 {
+    // TODO: Need to test the triangle filling without these calls. In theory, we shouldn't need to draw the individual lines.
     DrawLine(triangle->a, triangle->b);
     DrawLine(triangle->b, triangle->c);
     DrawLine(triangle->c, triangle->a);
@@ -147,13 +152,8 @@ void DrawTriangle(Triangle *triangle, bool fill)
     if (fill) FillTriangleOpt(triangle);
 }
 
-int main()
+void RenderAscii()
 {
-    std::memset(pixels, 0, sizeof(pixels));
-
-    Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
-    DrawTriangle(&triangle, true);
-
     for (int i = 0; i < PLANE_H; i++) {
         for (int j = 0; j < PLANE_W; j++) {
             if (pixels[i][j] != 0) {
@@ -164,6 +164,48 @@ int main()
         }
         std::cout << std::endl;
     }
+}
 
+void RenderPng()
+{
+    png_structp png = NULL;
+    png_infop info = NULL;
+
+    FILE *file = fopen("output.png", "wb");
+
+    if (!file) {
+        std::cout << "Error Rendering PNG: fopen returned NULL." << std::endl;
+        goto cleanup;
+    }
+
+    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png) {
+        std::cout << "Error Rendering PNG: png_create_write_struct returned NULL." << std::endl;
+        goto cleanup;
+    }
+    
+    info = png_create_info_struct(png);
+    if (!info) {
+        std::cout << "Error Rendering PNG: png_create_info_struct returned NULL." << std::endl;
+        goto cleanup;
+    }
+
+    // Work in progress.
+    info->width = PLANE_W;
+    info->height = PLANE_H;
+
+cleanup:
+    fclose(file);
+    png_destroy_write_struct(&png, &info);
+}
+
+int main()
+{
+    std::memset(pixels, 0, sizeof(pixels));
+
+    Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
+    DrawTriangle(&triangle, true);
+    
+    //RenderPng();
     return 0;
 }

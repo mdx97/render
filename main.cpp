@@ -11,7 +11,6 @@ typedef struct point_t {
     int y;
 } Point;
 
-
 typedef struct triangle_t {
     Point a;
     Point b;
@@ -84,34 +83,77 @@ bool PointInTriangle(const Point &point, const Triangle &triangle)
     return area <= TriangleArea(triangle);
 }
 
-void DrawTriangle(const Triangle &triangle, bool fill)
+void FillTriangleNaive(const Triangle &triangle)
 {
-    DrawLine(triangle.a, triangle.b);
-    DrawLine(triangle.b, triangle.c);
-    DrawLine(triangle.c, triangle.a);
+    int min_x = std::min(std::min(triangle.a.x, triangle.b.x), triangle.c.x);
+    int min_y = std::min(std::min(triangle.a.y, triangle.b.y), triangle.c.y);
+    int max_x = std::max(std::max(triangle.a.x, triangle.b.x), triangle.c.x);
+    int max_y = std::max(std::max(triangle.a.y, triangle.b.y), triangle.c.y);
 
-    if (fill) {
-        int min_x = std::min(std::min(triangle.a.x, triangle.b.x), triangle.c.x);
-        int min_y = std::min(std::min(triangle.a.y, triangle.b.y), triangle.c.y);
-        int max_x = std::max(std::max(triangle.a.x, triangle.b.x), triangle.c.x);
-        int max_y = std::max(std::max(triangle.a.y, triangle.b.y), triangle.c.y);
-
-        for (int i = min_y; i < max_y; i++) {
-            for (int j = min_x; j < max_x; j++) {
-                if (PointInTriangle(Point{j, i}, triangle)) {
-                    pixels[PLANE_H - i - 1][j] = 1;
-                }
+    for (int i = min_y; i < max_y; i++) {
+        for (int j = min_x; j < max_x; j++) {
+            if (PointInTriangle(Point{j, i}, triangle)) {
+                pixels[PLANE_H - i - 1][j] = 1;
             }
         }
     }
+}
+
+void FillTriangleOpt(Triangle *triangle)
+{
+    Point *a, *b, *c;
+
+    a = &triangle->a;
+    if (triangle->b.y > a->y) a = &triangle->b;
+    if (triangle->c.y > a->y) a = &triangle->c;
+
+    c = &triangle->a;
+    if (triangle->b.y < c->y) c = &triangle->b;
+    if (triangle->c.y < c->y) c = &triangle->c;
+
+    if (&triangle->a != a && &triangle->a != c) b = &triangle->a;
+    else if (&triangle->b != a && &triangle->b != c) b = &triangle->b;
+    else if (&triangle->c != a && &triangle->c != c) b = &triangle->c;
+
+    float m_ab = (float)(a->y - b->y) / (float)(a->x - b->x);
+    float m_ac = (float)(a->y - c->y) / (float)(a->x - c->x);
+    float m_bc = (float)(b->y - c->y) / (float)(b->x - c->x);
+
+    float b_ab = a->y - (m_ab * a->x);
+    float b_ac = a->y - (m_ac * a->x);
+    float b_bc = b->y - (m_bc * b->x);
+
+    int j;
+
+    for (int i = a->y; i > c->y; i--) {
+        if (i > b->y) j = (i - b_ab) / m_ab;
+        else          j = (i - b_bc) / m_bc;
+
+        int k = (i - b_ac) / m_ac;
+
+        for (int z = std::min(j, k); z < std::max(j, k); z++) {
+            pixels[PLANE_H - i - 1][z] = 1;
+        }
+    }
+}
+
+void DrawTriangle(Triangle *triangle, bool fill)
+{
+    DrawLine(triangle->a, triangle->b);
+    DrawLine(triangle->b, triangle->c);
+    DrawLine(triangle->c, triangle->a);
+
+    if (fill) FillTriangleOpt(triangle);
 }
 
 int main()
 {
     std::memset(pixels, 0, sizeof(pixels));
 
-    Triangle triangle {{1, 40}, {41, 80}, {120, 0}};
-    DrawTriangle(triangle, true);
+    //Triangle triangle{{1, 40}, {60, 80}, {120, 50}};
+    //Triangle triangle {{80, 1}, {41, 80}, {1, 50}};
+    Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
+    DrawTriangle(&triangle, true);
 
     for (int i = 0; i < PLANE_H; i++) {
         for (int j = 0; j < PLANE_W; j++) {

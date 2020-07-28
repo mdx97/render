@@ -1,11 +1,12 @@
 #include <algorithm>
+#include <cstdint>
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include "libpng16/png.h"
+#include "CImg.h"
 
-#define PLANE_W 128
-#define PLANE_H 128
+#define PLANE_W 1024
+#define PLANE_H 1024
 
 typedef struct point_t {
     int x;
@@ -18,9 +19,25 @@ typedef struct triangle_t {
     Point c;
 } Triangle;
 
-int pixels[PLANE_H][PLANE_W];
+uint8_t pixels[PLANE_H][PLANE_W];
 
-void DrawLine(const Point &p, const Point &q)
+typedef enum color {
+    BLACK,
+    WHITE,
+    RED,
+    GREEN,
+    BLUE
+} Color;
+
+unsigned char colors[][3] = {
+    {0, 0, 0},
+    {255, 255, 255},
+    {255, 0, 0},
+    {0, 255, 0},
+    {0, 0, 255}
+};
+
+void DrawLine(const Point &p, const Point &q, uint8_t color)
 {
     const Point &left = p.x < q.x ? p : q;
     const Point &right = p.x < q.x ? q : p;
@@ -31,7 +48,7 @@ void DrawLine(const Point &p, const Point &q)
     if (dx == 0) {
         int min_y = std::min(left.y, right.y);
         for (int i = 0; i < std::abs(dy); i++) {
-            pixels[PLANE_H - min_y - i - 1][left.x] = 1;
+            pixels[PLANE_H - min_y - i - 1][left.x] = color;
         }
         return;
     }
@@ -44,12 +61,12 @@ void DrawLine(const Point &p, const Point &q)
         int abs_x = left.x + x;
         int abs_y = left.y + rel_y;
 
-        pixels[PLANE_H - abs_y - 1][abs_x] = 1;
+        pixels[PLANE_H - abs_y - 1][abs_x] = color;
 
         int next_y = (int)(left.y + (m * (x + 1)));
 
         for (int y = abs_y; y != next_y; y += m_sign) {
-            pixels[PLANE_H - y - 1][abs_x] = 1;
+            pixels[PLANE_H - y - 1][abs_x] = color;
         }
     }
 }
@@ -106,7 +123,7 @@ void FillTriangleNaive(const Triangle &triangle)
 
 // Custom triangle filling algorithm that apparently works very similarly to standard triangle filling algorithms / scanline based rendering (except we're using a single shape here).
 // TODO: Needs to accomodate flat topped and flat bottomed triangles.
-void FillTriangleOpt(Triangle *triangle)
+void FillTriangleOpt(Triangle *triangle, uint8_t color)
 {
     Point *a, *b, *c;
 
@@ -138,19 +155,21 @@ void FillTriangleOpt(Triangle *triangle)
         int k = (i - b_ac) / m_ac;
 
         for (int x = std::min(j, k); x < std::max(j, k); x++) {
-            pixels[PLANE_H - i - 1][x] = 1;
+            pixels[PLANE_H - i - 1][x] = color;
         }
     }
 }
 
-void DrawTriangle(Triangle *triangle, bool fill)
+
+void DrawTriangle(Triangle *triangle, uint8_t color, bool fill = false)
 {
     // TODO: Need to test the triangle filling without these calls. In theory, we shouldn't need to draw the individual lines.
-    DrawLine(triangle->a, triangle->b);
-    DrawLine(triangle->b, triangle->c);
-    DrawLine(triangle->c, triangle->a);
+    DrawLine(triangle->a, triangle->b, color);
+    DrawLine(triangle->b, triangle->c, color);
+    DrawLine(triangle->c, triangle->a, color);
 
-    if (fill) FillTriangleOpt(triangle);
+    if (fill)
+        FillTriangleOpt(triangle, color);
 }
 
 void RenderAscii()
@@ -167,46 +186,26 @@ void RenderAscii()
     }
 }
 
-// void RenderPng()
-// {
-//     png_structp png = NULL;
-//     png_infop info = NULL;
+void RenderImage()
+{
+    cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
 
-//     FILE *file = fopen("output.png", "wb");
+    for (int i = 0; i < PLANE_H; i++) {
+        for (int j = 0; j < PLANE_W; j++) {
+            image.draw_point(j, i, colors[pixels[i][j]]);
+        }
+    }
 
-//     if (!file) {
-//         std::cout << "Error Rendering PNG: fopen returned NULL." << std::endl;
-//         goto cleanup;
-//     }
-
-//     png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-//     if (!png) {
-//         std::cout << "Error Rendering PNG: png_create_write_struct returned NULL." << std::endl;
-//         goto cleanup;
-//     }
-    
-//     info = png_create_info_struct(png);
-//     if (!info) {
-//         std::cout << "Error Rendering PNG: png_create_info_struct returned NULL." << std::endl;
-//         goto cleanup;
-//     }
-
-//     // Work in progress.
-//     info->width = PLANE_W;
-//     info->height = PLANE_H;
-
-// cleanup:
-//     fclose(file);
-//     png_destroy_write_struct(&png, &info);
-// }
+    image.display("Render");
+}
 
 int main()
 {
     std::memset(pixels, 0, sizeof(pixels));
 
-    Triangle triangle {{1, 40}, {41, 80}, {120, 1}};
-    DrawTriangle(&triangle, true);
+    Triangle triangle {{50, 600}, {800, 1000}, {950, 50}};
+    DrawTriangle(&triangle, RED, true);
     
-    RenderAscii();
+    RenderImage();
     return 0;
 }

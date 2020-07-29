@@ -4,10 +4,14 @@
 #include <cstdint>
 
 #define SAMPLE_SCALE 8
-#define PLANE_W 1024
-#define PLANE_H 1024
+#define PLANE_W 15360
+#define PLANE_H 8640
 
-extern uint32_t pixels[PLANE_H][PLANE_W];
+// #define SAMPLE_SCALE 2
+// #define PLANE_W 128
+// #define PLANE_H 128
+
+extern uint32_t **pixels;
 
 void RenderAscii();
 void RenderImage();

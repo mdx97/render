@@ -4,7 +4,7 @@
 #include "Rasterizer.h"
 #include "Renderer.h"
 
-uint32_t pixels[PLANE_H][PLANE_W];
+uint32_t **pixels;
 
 void RenderAscii()
 {
@@ -29,10 +29,10 @@ void HexToRgb(uint32_t hex, unsigned char *rgb)
 
 void RenderImage()
 {
-    cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
+    cimg_library::CImg<unsigned char> image(PLANE_W / SAMPLE_SCALE, PLANE_H / SAMPLE_SCALE, 1, 3);
 
-    for (int i = 0; i < PLANE_H; i++) {
-        for (int j = 0; j < PLANE_W; j++) {
+    for (int i = 0; i < PLANE_H; i += SAMPLE_SCALE) {
+        for (int j = 0; j < PLANE_W; j += SAMPLE_SCALE) {
             int rsum = 0, gsum = 0, bsum = 0;
             int sampled = 0;
             unsigned char color[3] = { 0, 0, 0 };
@@ -51,14 +51,20 @@ void RenderImage()
                 }
             }
 
-
             color[0] = rsum / sampled;
             color[1] = gsum / sampled;
             color[2] = bsum / sampled;
 
-            image.draw_point(j, i, color);
+            image.draw_point(j / SAMPLE_SCALE, i / SAMPLE_SCALE, color);
         }
     }
 
-    image.display("Render");
+    cimg_library::CImgDisplay display(PLANE_W / SAMPLE_SCALE, PLANE_H / SAMPLE_SCALE, "Render", 3, false, false);
+    image.display(display);
+
+    // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
+    // image.display("Render");
+
+    // TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
+    while(true);
 }

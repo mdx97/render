@@ -1,10 +1,10 @@
+#include <cmath>
 #include <iostream>
 #include "CImg.h"
 #include "Rasterizer.h"
 #include "Renderer.h"
 
-uint8_t pixels[PLANE_H][PLANE_W];
-float pixel_intensity[PLANE_H][PLANE_W];
+uint32_t pixels[PLANE_H][PLANE_W];
 
 void RenderAscii()
 {
@@ -20,18 +20,41 @@ void RenderAscii()
     }
 }
 
+void HexToRgb(uint32_t hex, unsigned char *rgb)
+{
+    rgb[0] = (hex >> 16) & 0xFF;
+    rgb[1] = (hex >> 8) & 0xFF;
+    rgb[2] = hex & 0xFF;
+}
+
 void RenderImage()
 {
     cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
 
     for (int i = 0; i < PLANE_H; i++) {
         for (int j = 0; j < PLANE_W; j++) {
-            unsigned char color[3];
-            std::memcpy(color, colors[pixels[i][j]], 3);
+            int rsum = 0, gsum = 0, bsum = 0;
+            int sampled = 0;
+            unsigned char color[3] = { 0, 0, 0 };
 
-            color[0] = color[0] * pixel_intensity[i][j];
-            color[1] = color[1] * pixel_intensity[i][j];
-            color[2] = color[2] * pixel_intensity[i][j];
+            for (int k = 0; k < SAMPLE_SCALE; k++) {
+                for (int l = 0; l < SAMPLE_SCALE; l++) {
+                    // TODO: Due to this logic, we just simply won't sample the bottom and right N pixels, where N = SAMPLE_SCALE.
+                    // Need to play around with ideas of reversing the sampling direction (try up and left instead of down and right for this part of the image maybe?)
+                    if (i + k < PLANE_H && j + l < PLANE_W) {
+                        HexToRgb(pixels[i + k][j + l], color);
+                        rsum += color[0];
+                        gsum += color[1];
+                        bsum += color[2];
+                        sampled++;
+                    }
+                }
+            }
+
+
+            color[0] = rsum / sampled;
+            color[1] = gsum / sampled;
+            color[2] = bsum / sampled;
 
             image.draw_point(j, i, color);
         }

@@ -2,15 +2,7 @@
 #include "Rasterizer.h"
 #include "Renderer.h"
 
-unsigned char colors[5][3] = {
-    {0, 0, 0},
-    {255, 255, 255},
-    {255, 0, 0},
-    {0, 255, 0},
-    {0, 0, 255}
-};
-
-void DrawLine(const Point &p, const Point &q, uint8_t color)
+void DrawLine(const Point &p, const Point &q, uint32_t color)
 {
     const Point &left = p.x < q.x ? p : q;
     const Point &right = p.x < q.x ? q : p;
@@ -38,29 +30,9 @@ void DrawLine(const Point &p, const Point &q, uint8_t color)
 
         for (int y = abs_y; y != next_y; y += m_sign) {
             pixels[PLANE_H - y - 1][abs_x] = color;
-
-            bool first_half = std::abs(y - abs_y) < static_cast<int>(std::abs(next_y - abs_y) / 2);
-            float vertical_aa_mod = first_half && m_sign == 1 || !first_half && m_sign == -1 ? 0.5f : 0.25f;
-
-            //------------------------
-            // Anti-Aliasing WIP code.
-            pixels[PLANE_H - y - 1][abs_x + 1] = color;
-            pixels[PLANE_H - y - 1][abs_x - 1] = color;
-            pixel_intensity[PLANE_H - y - 1][abs_x + 1] = vertical_aa_mod;
-            pixel_intensity[PLANE_H - y - 1][abs_x - 1] = vertical_aa_mod;
-            //------------------------
         }
 
         pixels[PLANE_H - abs_y - 1][abs_x] = color;
-
-        //------------------------
-        // Anti-Aliasing WIP code.
-        pixels[PLANE_H - abs_y][abs_x] = color;
-        pixels[PLANE_H - abs_y - 2][abs_x] = color; // todo: bounds check?
-        pixel_intensity[PLANE_H - abs_y][abs_x] = 0.5f;
-        pixel_intensity[PLANE_H - abs_y - 2][abs_x] = 0.5f; // todo: bounds check?
-        //------------------------
-
     }
 }
 
@@ -77,7 +49,6 @@ void FillTriangleNaive(const Triangle &triangle)
         for (int j = min_x; j < max_x; j++) {
             if (PointInTriangle(Point{j, i}, triangle)) {
                 pixels[PLANE_H - i - 1][j] = 1;
-                pixel_intensity[PLANE_H - i - 1][j] = 1;
             }
         }
     }
@@ -85,7 +56,7 @@ void FillTriangleNaive(const Triangle &triangle)
 
 // Custom triangle filling algorithm that apparently works very similarly to standard triangle filling algorithms / scanline based rendering (except we're using a single shape here).
 // TODO: Needs to accomodate flat topped and flat bottomed triangles.
-void FillTriangleOpt(Triangle *triangle, uint8_t color)
+void FillTriangleOpt(Triangle *triangle, uint32_t color)
 {
     Point *a, *b, *c;
 
@@ -118,13 +89,12 @@ void FillTriangleOpt(Triangle *triangle, uint8_t color)
 
         for (int x = std::min(j, k); x <= std::max(j, k); x++) {
             pixels[PLANE_H - i - 1][x] = color;
-            pixel_intensity[PLANE_H - i - 1][x] = 1.0f;
         }
     }
 }
 
 
-void DrawTriangle(Triangle *triangle, uint8_t color, bool fill = false)
+void DrawTriangle(Triangle *triangle, uint32_t color, bool fill = false)
 {
     // TODO: Need to test the triangle filling without these calls. In theory, we shouldn't need to draw the individual lines.
     DrawLine(triangle->a, triangle->b, color);

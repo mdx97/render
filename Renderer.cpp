@@ -4,6 +4,7 @@
 #include "Renderer.h"
 
 uint8_t pixels[PLANE_H][PLANE_W];
+float pixel_intensity[PLANE_H][PLANE_W];
 
 void RenderAscii()
 {
@@ -25,7 +26,14 @@ void RenderImage()
 
     for (int i = 0; i < PLANE_H; i++) {
         for (int j = 0; j < PLANE_W; j++) {
-            image.draw_point(j, i, colors[pixels[i][j]]);
+            unsigned char color[3];
+            std::memcpy(color, colors[pixels[i][j]], 3);
+
+            color[0] = color[0] * pixel_intensity[i][j];
+            color[1] = color[1] * pixel_intensity[i][j];
+            color[2] = color[2] * pixel_intensity[i][j];
+
+            image.draw_point(j, i, color);
         }
     }
 

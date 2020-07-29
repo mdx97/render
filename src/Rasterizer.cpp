@@ -96,11 +96,11 @@ void FillTriangleOpt(Triangle *triangle, uint32_t color)
 
 void DrawTriangle(Triangle *triangle, uint32_t color, bool fill = false)
 {
-    // TODO: Need to test the triangle filling without these calls. In theory, we shouldn't need to draw the individual lines.
-    DrawLine(triangle->a, triangle->b, color);
-    DrawLine(triangle->b, triangle->c, color);
-    DrawLine(triangle->c, triangle->a, color);
-
-    if (fill)
+    if (fill) {
         FillTriangleOpt(triangle, color);
+    } else {
+        DrawLine(triangle->a, triangle->b, color);
+        DrawLine(triangle->b, triangle->c, color);
+        DrawLine(triangle->c, triangle->a, color);
+    }
 }

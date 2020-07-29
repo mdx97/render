@@ -1,2 +1,2 @@
-main: main.cpp Maths.cpp Rasterizer.cpp Renderer.cpp
-	g++ main.cpp Maths.cpp Rasterizer.cpp Renderer.cpp -g -I /d/MinGW_dev/include/ -O2 -lgdi32
+main: apps/main.cpp src/Maths.cpp src/Rasterizer.cpp src/Renderer.cpp
+	g++ apps/main.cpp src/Maths.cpp src/Rasterizer.cpp src/Renderer.cpp -g -I /d/MinGW_dev/include/ -I ./includes -O2 -lgdi32 -o bin/main.exe

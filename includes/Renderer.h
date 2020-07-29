@@ -15,5 +15,6 @@ extern uint32_t **pixels;
 
 void RenderAscii();
 void RenderImage();
+void InitRenderer();
 
 #endif

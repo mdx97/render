@@ -68,3 +68,14 @@ void RenderImage()
     // TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
     while(true);
 }
+
+void InitRenderer()
+{
+    // TODO: Find a different way to allocate this.
+    pixels = (uint32_t **)malloc(PLANE_H * sizeof(uint32_t*));
+
+    for (int i = 0; i < PLANE_H; i++) {
+        pixels[i] = (uint32_t *)malloc(PLANE_W * sizeof(uint32_t));
+        std::memset(pixels[i], 0, PLANE_W * sizeof(uint32_t));
+    }
+}

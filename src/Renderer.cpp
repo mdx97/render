@@ -64,14 +64,15 @@ void RenderImage()
         }
     }
 
-    // cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
-    // image.display(display);
+    cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
+    image.display(display);
 
-    // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
-    image.display("Render");
+    while(!display.is_closed());
 
-    // @TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
-    while(true);
+    // // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
+    // image.display("Render");
+    // while(true); // @FIXME: May need to set up a seperate display for the debug code, but it's debug code \_O_/.
+
 }
 
 // Allocates all memory the renderer needs.

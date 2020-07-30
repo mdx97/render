@@ -3,15 +3,16 @@
 
 #include <cstdint>
 
-#define SAMPLE_SCALE 8
-#define PLANE_W 15360
-#define PLANE_H 8640
+#define SAMPLE_SCALE 16
+#define PLANE_W 1920
+#define PLANE_H 1080
 
-// #define SAMPLE_SCALE 2
-// #define PLANE_W 128
-// #define PLANE_H 128
+// typedef enum antialiasing_method_e {
+//     FSAA
+// } AntiAliasingMethod;
 
 extern uint32_t **pixels;
+//extern AntiAliasingMethod antialiasing_method;
 
 void RenderAscii();
 void RenderImage();

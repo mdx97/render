@@ -29,19 +29,19 @@ void HexToRgb(uint32_t hex, unsigned char *rgb)
 
 void RenderImage()
 {
-    cimg_library::CImg<unsigned char> image(PLANE_W / SAMPLE_SCALE, PLANE_H / SAMPLE_SCALE, 1, 3);
+    cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
 
-    for (int i = 0; i < PLANE_H; i += SAMPLE_SCALE) {
-        for (int j = 0; j < PLANE_W; j += SAMPLE_SCALE) {
+    for (int i = 0; i < PLANE_H * SAMPLE_SCALE; i += SAMPLE_SCALE) {
+        for (int j = 0; j < PLANE_W * SAMPLE_SCALE; j += SAMPLE_SCALE) {
             int rsum = 0, gsum = 0, bsum = 0;
             int sampled = 0;
             unsigned char color[3] = { 0, 0, 0 };
 
             for (int k = 0; k < SAMPLE_SCALE; k++) {
                 for (int l = 0; l < SAMPLE_SCALE; l++) {
-                    // TODO: Due to this logic, we just simply won't sample the bottom and right N pixels, where N = SAMPLE_SCALE.
+                    // @TODO: Due to this logic, we just simply won't sample the bottom and right N pixels, where N = SAMPLE_SCALE.
                     // Need to play around with ideas of reversing the sampling direction (try up and left instead of down and right for this part of the image maybe?)
-                    if (i + k < PLANE_H && j + l < PLANE_W) {
+                    if (i + k < PLANE_H * SAMPLE_SCALE && j + l < PLANE_W * SAMPLE_SCALE) {
                         HexToRgb(pixels[i + k][j + l], color);
                         rsum += color[0];
                         gsum += color[1];
@@ -55,27 +55,30 @@ void RenderImage()
             color[1] = gsum / sampled;
             color[2] = bsum / sampled;
 
-            image.draw_point(j / SAMPLE_SCALE, i / SAMPLE_SCALE, color);
+            int x = j / SAMPLE_SCALE;
+            int y = i / SAMPLE_SCALE;
+
+            image.draw_point(x, y, color);
         }
     }
 
-    cimg_library::CImgDisplay display(PLANE_W / SAMPLE_SCALE, PLANE_H / SAMPLE_SCALE, "Render", 3, false, false);
-    image.display(display);
+    // cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
+    // image.display(display);
 
     // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
-    // image.display("Render");
+    image.display("Render");
 
-    // TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
+    // @TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
     while(true);
 }
 
 void InitRenderer()
 {
-    // TODO: Find a different way to allocate this.
-    pixels = (uint32_t **)malloc(PLANE_H * sizeof(uint32_t*));
+    // @FIXME: Find a different way to allocate this.
+    pixels = (uint32_t **)malloc(PLANE_H * SAMPLE_SCALE * sizeof(uint32_t*));
 
-    for (int i = 0; i < PLANE_H; i++) {
-        pixels[i] = (uint32_t *)malloc(PLANE_W * sizeof(uint32_t));
-        std::memset(pixels[i], 0, PLANE_W * sizeof(uint32_t));
+    for (int i = 0; i < PLANE_H * SAMPLE_SCALE; i++) {
+        pixels[i] = (uint32_t *)malloc(PLANE_W * SAMPLE_SCALE * sizeof(uint32_t));
+        std::memset(pixels[i], 0, PLANE_W * SAMPLE_SCALE * sizeof(uint32_t));
     }
 }

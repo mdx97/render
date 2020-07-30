@@ -8,8 +8,8 @@ int main()
     InitRenderer();
 
     Point center{PLANE_W / 2, PLANE_H / 2};
-    int radius = 3000;
-    int arc = 1;
+    int radius = 400;
+    int arc = 20;
 
     Point *last = new Point{center.x + radius, center.y};
 

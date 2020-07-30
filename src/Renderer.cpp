@@ -78,11 +78,13 @@ void RenderImage()
 // Allocates all memory the renderer needs.
 void InitRenderer()
 {
-    // @FIXME: Find a different way to allocate this.
-    pixels = (uint32_t **)malloc(PLANE_H * SAMPLE_SCALE * sizeof(uint32_t*));
+    int h = PLANE_H * SAMPLE_SCALE;
+    int w = PLANE_W * SAMPLE_SCALE;
 
-    for (int i = 0; i < PLANE_H * SAMPLE_SCALE; i++) {
-        pixels[i] = (uint32_t *)malloc(PLANE_W * SAMPLE_SCALE * sizeof(uint32_t));
-        std::memset(pixels[i], 0, PLANE_W * SAMPLE_SCALE * sizeof(uint32_t));
+    pixels = new uint32_t*[h];
+
+    for (int i = 0; i < h; i++) {
+        pixels[i] = new uint32_t[w];
+        std::memset(pixels[i], 0, w * sizeof(uint32_t));
     }
 }

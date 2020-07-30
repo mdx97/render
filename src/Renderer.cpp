@@ -34,24 +34,22 @@ void HexToRgb(uint32_t hex, unsigned char *rgb)
 void RenderImage()
 {
     cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
+    int sampled = std::pow(SAMPLE_SCALE, 2);
 
     for (int i = 0; i < PLANE_H * SAMPLE_SCALE; i += SAMPLE_SCALE) {
         for (int j = 0; j < PLANE_W * SAMPLE_SCALE; j += SAMPLE_SCALE) {
             int rsum = 0, gsum = 0, bsum = 0;
-            int sampled = 0;
             unsigned char color[3] = { 0, 0, 0 };
 
             for (int k = 0; k < SAMPLE_SCALE; k++) {
                 for (int l = 0; l < SAMPLE_SCALE; l++) {
-                    // @TODO: Due to this logic, we just simply won't sample the bottom and right N pixels, where N = SAMPLE_SCALE.
-                    // Need to play around with ideas of reversing the sampling direction (try up and left instead of down and right for this part of the image maybe?)
-                    if (i + k < PLANE_H * SAMPLE_SCALE && j + l < PLANE_W * SAMPLE_SCALE) {
-                        HexToRgb(pixels[i + k][j + l], color);
-                        rsum += color[0];
-                        gsum += color[1];
-                        bsum += color[2];
-                        sampled++;
-                    }
+                    int row = i < PLANE_H - SAMPLE_SCALE ? i + k : i - k;
+                    int col = j < PLANE_W - SAMPLE_SCALE ? j + l : j - l;
+
+                    HexToRgb(pixels[row][col], color);
+                    rsum += color[0];
+                    gsum += color[1];
+                    bsum += color[2];
                 }
             }
 
@@ -66,11 +64,11 @@ void RenderImage()
         }
     }
 
-    cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
-    image.display(display);
+    // cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
+    // image.display(display);
 
     // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
-    // image.display("Render");
+    image.display("Render");
 
     // @TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
     while(true);

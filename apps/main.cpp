@@ -12,7 +12,7 @@ int main()
     // Point p2{900, 100};
     // DrawLine(p1, p2, 0xFFFF);
     
-    Triangle triangle{{50, 500}, {50, 1000}, {1000, 50}};
+    Triangle triangle{{20, 500}, {50, 1000}, {1919, 1}};
     DrawTriangle(&triangle, 0xFF0000, true);
    
     RenderImage();

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#define SAMPLE_SCALE 16
+#define SAMPLE_SCALE 8
 #define PLANE_W 1920
 #define PLANE_H 1080
 

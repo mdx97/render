@@ -6,20 +6,23 @@
 
 uint32_t **pixels;
 
-void RenderAscii()
-{
-    for (int i = 0; i < PLANE_H; i++) {
-        for (int j = 0; j < PLANE_W; j++) {
-            if (pixels[i][j] != 0) {
-                std::cout << pixels[i][j] << " ";
-            } else {
-                std::cout << "  ";
-            }
-        }
-        std::cout << std::endl;
-    }
-}
+// void RenderAscii()
+// {
+//     for (int i = 0; i < PLANE_H; i++) {
+//         for (int j = 0; j < PLANE_W; j++) {
+//             if (pixels[i][j] != 0) {
+//                 std::cout << pixels[i][j] << " ";
+//             } else {
+//                 std::cout << "  ";
+//             }
+//         }
+//         std::cout << std::endl;
+//     }
+// }
 
+// Converts a hexidecimal color code into RGB format.
+// note: the hex data is stored in the least significant bits of the 32 bit number.
+// example: 0x[00]FFFFFF = (255, 255, 255)
 void HexToRgb(uint32_t hex, unsigned char *rgb)
 {
     rgb[0] = (hex >> 16) & 0xFF;
@@ -27,6 +30,7 @@ void HexToRgb(uint32_t hex, unsigned char *rgb)
     rgb[2] = hex & 0xFF;
 }
 
+// Renders the image currently drawn in the front buffer (pixels).
 void RenderImage()
 {
     cimg_library::CImg<unsigned char> image(PLANE_W, PLANE_H, 1, 3);
@@ -62,16 +66,17 @@ void RenderImage()
         }
     }
 
-    // cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
-    // image.display(display);
+    cimg_library::CImgDisplay display(PLANE_W, PLANE_H, "Render", 3, false, false);
+    image.display(display);
 
     // Keeping this commented out because sometimes we need to be able to zoom in on pixels.
-    image.display("Render");
+    // image.display("Render");
 
     // @TODO: Eventually we're going to have to find a different way to wait, as we'll want to be able to call RenderImage multiple times.
     while(true);
 }
 
+// Allocates all memory the renderer needs.
 void InitRenderer()
 {
     // @FIXME: Find a different way to allocate this.

@@ -4,17 +4,20 @@
 #include "Rasterizer.h"
 #include "Renderer.h"
 
+// Allocates a new scaled version of the given point. (with respect to the current AA sample scale.)
 Point *ScalePoint(const Point *p)
 {
     return new Point{p->x * SAMPLE_SCALE, p->y * SAMPLE_SCALE};
 }
 
+// Scales the given point. (with respect to the current AA sample scale.)
 void ScalePointByref(Point *p)
 {
     p->x = p->x * SAMPLE_SCALE;
     p->y = p->y * SAMPLE_SCALE;
 }
 
+// Scales the given triangle. (with respect to the current AA sample scale.)
 Triangle *ScaleTriangle(const Triangle *triangle)
 {
     Triangle *scaled = new Triangle{triangle->a, triangle->b, triangle->c};
@@ -24,11 +27,13 @@ Triangle *ScaleTriangle(const Triangle *triangle)
     return scaled;
 }
 
+// Draws a pixel at the *scaled* coordinate x, y.
 void DrawPixel(int x, int y, uint32_t color)
 {
     pixels[(PLANE_H * SAMPLE_SCALE) - y - 1][x] = color;
 }
 
+// Draws a line between two points with respect to the *unscaled* plane.
 void DrawLine(const Point *p, const Point *q, uint32_t color)
 {
     const Point *left = p->x < q->x ? p : q;
@@ -88,6 +93,8 @@ void DrawLine(const Point *p, const Point *q, uint32_t color)
 //     }
 // }
 
+// Fills a triangle (consisting of the given points) that meets the following constraints.
+// a.y != b.y = c.y
 void FillFlatBaseTriangleHelper(const Point *a, const Point *b, const Point *c, uint32_t color)
 {
     float m_ab = 0, m_ac = 0, b_ab = 0, b_ac = 0;
@@ -111,7 +118,9 @@ void FillFlatBaseTriangleHelper(const Point *a, const Point *b, const Point *c, 
 
     int direction = a->y < b->y ? 1 : -1;
 
-    for (int i = a->y; i != b->y; i += direction) {
+    for (int i = a->y; i != b->y + direction; i += direction) {
+        // Solve for x for the two triangle sides at our current y-coordinate.
+        // Unless the line is vertical, then use the x intercept of the line.
         int j = !ab_vert ? (i - b_ab) / m_ab : a->x;
         int k = !ac_vert ? (i - b_ac) / m_ac : a->x;
 
@@ -125,11 +134,15 @@ void FillFlatBaseTriangleHelper(const Point *a, const Point *b, const Point *c, 
     delete c;
 }
 
+// Fills a triangle that meets the following constraints.
+// a.y > b.y = c.y
 void FillFlatBottomTriangle(const Triangle *triangle, uint32_t color) 
 {
     FillFlatBaseTriangleHelper(&triangle->a, &triangle->b, &triangle->c, color);
 }
 
+// Fills a triangle that meets the following constraints.
+// c.y < a.y = b.y
 void FillFlatTopTriangle(const Triangle *triangle, uint32_t color)
 {
     FillFlatBaseTriangleHelper(&triangle->c, &triangle->a, &triangle->b, color);
@@ -167,6 +180,8 @@ void FillTriangleOpt(const Triangle *triangle, uint32_t color)
             x = (b->y - b_ac) / m_ac;
         }
 
+        // This point represents the point where B's y-intercept meets the line AC.
+        // The line BD is used to cut the triangle into a flat bottom triangle and a flat top triangle.
         Point d{x, b->y};
 
         Triangle top{*a, *b, d};
@@ -177,6 +192,7 @@ void FillTriangleOpt(const Triangle *triangle, uint32_t color)
     }
 }
 
+// Draws a triangle with respect to the *unscaled* plane.
 void DrawTriangle(const Triangle *triangle, uint32_t color, bool fill = false)
 {
     if (fill) {

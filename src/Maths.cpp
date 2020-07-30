@@ -1,6 +1,7 @@
 #include <cmath>
 #include "Maths.h"
 
+// Returns a triangle's area.
 float TriangleArea(const Triangle &triangle)
 {
     return std::fabs((
@@ -9,6 +10,7 @@ float TriangleArea(const Triangle &triangle)
         (triangle.c.x * (triangle.a.y - triangle.b.y))) / 2);
 }
 
+// Returns whether the given point is inside the bounds of the triangle.
 bool PointInTriangle(const Point &point, const Triangle &triangle)
 {
     Triangle component_triangles[3];

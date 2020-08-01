@@ -46,22 +46,24 @@ void DrawLine(const Point *p, const Point *q, uint32_t color)
     int dx = right->x - left->x;
 
     if (dx == 0) {
+        // Line is vertical, so we don't need to worry about moving horizontally through the grid, as the code below does.
         int min_y = std::min(left->y, right->y);
-        for (int i = 0; i < std::abs(dy); i++) {
-            DrawPixel(left->x, min_y + i, color);
+        for (int rel_y = 0; rel_y < std::abs(dy); rel_y++) {
+            DrawPixel(left->x, min_y + rel_y, color);
         }
         return;
     }
 
-    float m = (float)dy / (float)dx;
+    float m = static_cast<float>(dy) / static_cast<float>(dx);
     int m_sign = m >= 0 ? 1 : -1;
 
-    for (int x = 0; x < dx; x++) {
-        float rel_y = m * x;
-        int abs_x = left->x + x;
+    for (int rel_x = 0; rel_x < dx; rel_x++) {
+        float rel_y = m * rel_x;
+        
+        int abs_x = left->x + rel_x;
         int abs_y = left->y + rel_y;
 
-        int next_y = (int)(left->y + (m * (x + 1)));
+        int next_y = static_cast<int>(left->y + (m * (rel_x + 1)));
 
         for (int y = abs_y; y != next_y; y += m_sign) {
             DrawPixel(abs_x, y, color);
@@ -107,25 +109,25 @@ void FillFlatBaseTriangleHelper(const Point *a, const Point *b, const Point *c, 
     bool ac_vert = a->x == c->x;
 
     if (!ab_vert) {
-        m_ab = (float)(a->y - b->y) / (float)(a->x - b->x);
+        m_ab = static_cast<float>(a->y - b->y) / static_cast<float>(a->x - b->x);
         b_ab = a->y - (m_ab * a->x);
     }
 
     if (!ac_vert) {
-        m_ac = (float)(a->y - c->y) / (float)(a->x - c->x);
+        m_ac = static_cast<float>(a->y - c->y) / static_cast<float>(a->x - c->x);
         b_ac = a->y - (m_ac * a->x);
     }
 
     int direction = a->y < b->y ? 1 : -1;
 
-    for (int i = a->y; i != b->y + direction; i += direction) {
-        // Solve for x for the two triangle sides at our current y-coordinate.
-        // Unless the line is vertical, then use the x intercept of the line.
-        int j = !ab_vert ? (i - b_ab) / m_ab : a->x;
-        int k = !ac_vert ? (i - b_ac) / m_ac : a->x;
+    for (int y = a->y; y != b->y + direction; y += direction) {
+        // Solve for x for the two triangle sides at our current y.
+        // This gives us the two x coordinates that we need to fill in this row of pixels.
+        int x1 = !ab_vert ? (y - b_ab) / m_ab : a->x;
+        int x2 = !ac_vert ? (y - b_ac) / m_ac : a->x;
 
-        for (int x = std::min(j, k); x <= std::max(j, k); x++) {
-            DrawPixel(x, i, color);
+        for (int x = std::min(x1, x2); x <= std::max(x1, x2); x++) {
+            DrawPixel(x, y, color);
         }
     }
 
@@ -175,7 +177,7 @@ void FillTriangleOpt(const Triangle *triangle, uint32_t color)
         int x = a->x;
 
         if (a->x - c->x != 0) {
-            float m_ac = (float)(a->y - c->y) / (float)(a->x - c->x);
+            float m_ac = static_cast<float>(a->y - c->y) / static_cast<float>(a->x - c->x);
             float b_ac = a->y - (m_ac * a->x);
             x = (b->y - b_ac) / m_ac;
         }
